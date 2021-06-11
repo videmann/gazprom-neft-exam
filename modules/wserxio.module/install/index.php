@@ -3,10 +3,13 @@
 use Bitrix\Main\Localization\Loc;
 Loc::loadLanguageFile(__FILE__);
 
-class WSerxioModule extends CModule
+class WSerxio_Module extends CModule
 {
 	var $MODULE_ID = 'wserxio.module';
-	var $MODULE_NAME;
+	var $MODULE_NAME = 'wserxio.module';
+	var $MODULE_DESCRIPTION = 'Модуль-решение тестового задания';
+	var $MODULE_VERSION = '00.00.01';
+	var $MODULE_VERSION_DATE = '2021-06-11 23:06:00';
 
 	public function DoInstall()
 	{
@@ -15,6 +18,8 @@ class WSerxioModule extends CModule
 			Loc::getMessage('FORM_INSTALL_TITLE'),
 			__DIR__.'../step1.php'
 		);
+
+		$this->InstallDemo();
 		/**
 		 * Создать highload блок:
 		 * 1. code 'map-data'
