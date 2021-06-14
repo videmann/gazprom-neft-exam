@@ -103,7 +103,8 @@ class Demo
 
         $params = [
             'IBLOCK_TYPE_ID' => self::$iblockTypeId,
-            'NAME' => self::DEFAULT_CODE,
+            'NAME' => $code,
+            'API_CODE' => preg_replace('/_/', '', $code),
             'ACTIVE' => 'Y',
             'VERSION' => 1,
             'CODE' => $code,
@@ -295,45 +296,47 @@ class Demo
         }
         elseif(self::$cache->startDataCache(self::$ttl, self::$cacheId, self::$cacheDir))
         {
-            $iblockDBQuery = IblockTable::query()
+            $result = [];
+
+            \Bitrix\Main\Loader::includeModule('iblock');
+
+            $iblockId = IblockTable::query()
                 ->addFilter('IBLOCK_TYPE_ID', 'ymaps_demo')
-                ->addSelect('ID');
+                ->addSelect('ID')
+                ->fetchObject()
+                ->getId();
 
-            $propertyDBQuery = PropertyTable::query()
-                ->addFilter('CODE', 'COORDS')
-                ->addSelect('ID');
+            $iblock = \Bitrix\Iblock\Iblock::wakeUp($iblockId);
 
-            $dbQuery = ElementTable::query()
+            $offices = $iblock->getEntityDataClass()::query()
                 ->setFilter([
-                    '@IBLOCK_ID' => new SqlExpression($iblockDBQuery->getQuery()),
-                    'ACTIVE' => 'Y'
+                    '=ACTIVE' => 'Y'
                 ])
-                ->registerRuntimeField('PROPERTY_COORDS', new ReferenceField(
-                    'PROPERTY_COORDS',
-                    ElementPropertyTable::getEntity(),
-                    [
-                        '=this.ID' => 'ref.IBLOCK_ELEMENT_ID',
-                        'ref.IBLOCK_PROPERTY_ID' => new SqlExpression($propertyDBQuery->fetchObject()->getId())
-                    ],
-                ))
-                ->setCacheTtl(3600)
-                ->cacheJoins(true)
                 ->setSelect([
                     'ID',
                     'NAME',
-                    'COORDS' => 'PROPERTY_COORDS.VALUE'
-                ]);
+                    'COORDS',
+                    'CITY',
+                    'PHONE',
+                    'EMAIL'
+                ])
+                ->fetchCollection();
 
-            $result = $dbQuery->exec()->fetchAll();
+            foreach ($offices as $office)
+            {
+                $result[] = [
+                    'id'        => $office->getId(),
+                    'name'      => $office->getName(),
+                    'coords'    => $office->getCoords()->getValue(),
+                    'city'      => $office->getCity()->getValue(),
+                    'phone'     => $office->getPhone()->getValue(),
+                    'email'     => $office->getEmail()->getValue()
+                ];
+            }
 
             self::$cache->endDataCache($result);
         }
 
         return $result;
-    }
-
-    public function handleRequest(string $method)
-    {
-        return call_user_func(__CLASS__.'::'.$method);
     }
 }
