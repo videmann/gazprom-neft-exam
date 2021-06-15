@@ -6,6 +6,13 @@ html, body {
 	font-size: 10px;
 }
 
+.center-container {
+	position: relative;
+	margin: 0 auto;
+	width: 100%;
+	max-width: 1200px;
+}
+
 .map {
 	position: relative;
 }
@@ -27,7 +34,7 @@ html, body {
 
 	.map__sticker {
 		position: absolute;
-		right: 0;
+		left: 0;
 		top: 0;
 		bottom: 0;
 		width: 300px;
@@ -45,11 +52,11 @@ html, body {
 	}
 	.map__map {
 		height: 50vh;
-		width: 100%;
+		width: 100vw;
 	}
 	.map__sticker {
 		position: relative;
-		width: 100%;
+		width: 100vw;
 		height: 50vh;
 		max-height: 50vh;
 	}

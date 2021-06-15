@@ -57,7 +57,7 @@
 					closeButton: true
 				});
 
-				//window.map.setZoom(13);
+				window.map.setZoom(13);
 
 				setActive(item, items);
 			})
