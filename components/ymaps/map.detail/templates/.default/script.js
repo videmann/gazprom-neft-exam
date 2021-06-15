@@ -1,36 +1,72 @@
 (function(window, document, BX) {
 
-	ymaps.ready(function() {
+	const placemarkDefaults = {
+		preset: 'islands#blueStretchyIcon',
+	}
+
+	const setActive = (current, items) => {
+		if(!current.classList.contains('active')) {
+			for(item of items) {
+				item.classList.remove('active')
+			}
+
+			current.classList.add('active')
+
+			current.parentElement.scrollBy({
+				top: current.offsetTop,
+				behavior: 'smooth'
+			})
+		}
+	}
+
+	const init = () => {
+
+		const collection = new ymaps.GeoObjectCollection()
+		const items = document.querySelectorAll('[data-values]')
 
 		window.map = new ymaps.Map('map', {
 			center: window.JSYmapsItems[0].coords.split(', '),
-			zoom: 7,
+			zoom: 1,
+			behaviors: ['drag', 'multiTouch', 'dblClickZoom'],
+			duration: 1000,
 			controls: ['zoomControl']
-		});
+		})
 
-		window.collection = new ymaps.GeoObjectCollection();
+		Array.prototype.forEach.call(items, item => {
 
-		Array.prototype.forEach.call(window.JSYmapsItems, function(item) {
+			const values = JSON.parse(item.dataset.values)
+			const coords = values.coords.split(', ')
 
-			office = new ymaps.Placemark(item.coords.split(', '), {
-				balloonContentHeader: '<h5>'+item.name+'</h5>',
-				balloonContentBody: [
-					'<a href="'+'tel:'+item.phone.replace('/\s|\-|\(|\)/', '', item.phone)+'">'+item.phone+'</a>',
-					'<a href="'+'email:'+item.email+'">'+item.email+'</a>'
-				]
-			}, {
-				balloonPanelMaxMapArea: 0,
-				draggable: "true",
-				preset: "islands#blueStretchyIcon",
-				openEmptyBalloon: true
-			});
+			const office = new ymaps.Placemark(coords, {
+				//balloonContentHeader: values.name,
+				balloonContentBody: item.innerHTML
+			}, placemarkDefaults)
 
-			window.collection.add(office);
+			office.events.add('click', event => {
+				const element = document.getElementById(`office_${values.id}`);
 
-		});
+				setActive(element, items);
+			})
 
-		window.map.geoObjects.add(window.collection);
-		window.map.setBounds(window.collection.getBounds());
-	})
+			collection.add(office)
 
-})(window, document, BX);
+			item.addEventListener('click', event => {
+				window.map.setCenter(coords);
+
+				window.map.balloon.open(coords, item.innerHTML, {
+					closeButton: true
+				});
+
+				//window.map.setZoom(13);
+
+				setActive(item, items);
+			})
+		})
+
+		window.map.geoObjects.add(collection)
+		window.map.setBounds(collection.getBounds())
+	}
+
+	ymaps.ready(init)
+
+})(window, document, BX)
